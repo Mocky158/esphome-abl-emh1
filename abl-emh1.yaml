@@ -81,18 +81,14 @@ text_sensor:
         if (id(l3_current).state > 1.0)
           phaseCnt++;
       }
-      std::__cxx11::string result;
-      switch (phaseCnt){
-        case 0: 
-          result = "None";
-          break;
+      switch (phaseCnt) {
+        case 0:
+          return {"None"};
         case 1:
-          result = "1 Phase";
-          break;
+          return {"1 Phase"};
         default:
-          result = "3 Phase";
+          return {"3 Phase"};
       }
-      return result;
 
 sensor:
   - platform: abl_emh1
@@ -148,7 +144,7 @@ number:
     step: 1
     optimistic: false
     lambda: 'return std::lround(id(max_current).state);'
-    update_interval: 1s
+    update_interval: 10s
     set_action:
       lambda: |-
         ESP_LOGD("main", "Sending modbus value = %d", std::lround(x));
