@@ -191,19 +191,23 @@ void eMH1Modbus::get_serial() {
 
 // set Max current
 void eMH1Modbus::send_current(uint8_t x) {
-	eMH1MessageT *tx_message = &this->emh1_tx_message;
-  tx_message->DeviceId = 0x01;				// default address
-	tx_message->FunctionCode = 0x10;		// write operation
-	tx_message->Destination = 0x0014;		// Set Ic Max
-	tx_message->DataLength = 0x0001;		// 1 16-bit register
-	tx_message->WriteBytes = 0x02;			// quantity of value bytes
-	uint16_t v = std::floor(16.67*x);
-  ESP_LOGD(TAG, "Set Max Current to %d Amps (0x%04X)", x, v);
-	uint8_t v1 = 0 + (v >> 8);
-	uint8_t v2 = 0 + (v & 0x00FF);
-	tx_message->Data[0] = v1;
-	tx_message->Data[1] = v2;
-	this->send();
+  eMH1MessageT *tx_message = &this->emh1_tx_message;
+  tx_message->FunctionCode = 0x10;
+  tx_message->Destination = 0x0014;
+  tx_message->DataLength = 0x0001;
+  tx_message->WriteBytes = 0x02;
+  uint16_t value;
+  if (x == 0) {
+    value = 0x03E8;  // Speciální hodnota pro 0A
+    ESP_LOGD(TAG, "Set current to 0A (special off)");
+  } else {
+    if (x < 6) x = 6;  // Min 6A
+    value = static_cast<uint16_t>(x * (10.0f / 0.6f));  // ~ x * 16.6667
+    ESP_LOGD(TAG, "Set current to %dA (value: 0x%04X)", x, value);
+  }
+  tx_message->Data[0] = (value >> 8) & 0xFF;
+  tx_message->Data[1] = value & 0xFF;
+  this->send();
 }
 
 // send enable/disable
