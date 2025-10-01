@@ -197,11 +197,11 @@ void eMH1Modbus::send_current(uint8_t x) {
   tx_message->DataLength = 0x0001;
   tx_message->WriteBytes = 0x02;
   uint16_t value;
-  if (x == 0) {
+  if (x <= 5) {  // Pokud je proud 5A nebo nižší, pošli 0A
     value = 0x03E8;  // Speciální hodnota pro 0A
-    ESP_LOGD(TAG, "Set current to 0A (special off)");
+    ESP_LOGD(TAG, "Set current to 0A (special off, input was %dA)", x);
   } else {
-    if (x < 6) x = 6;  // Min 6A
+    if (x < 6) x = 6;  // Min 6A pro normální nabíjení
     value = static_cast<uint16_t>(x * (10.0f / 0.6f));  // ~ x * 16.6667
     ESP_LOGD(TAG, "Set current to %dA (value: 0x%04X)", x, value);
   }
